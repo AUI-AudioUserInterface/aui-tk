@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aui-tk"
+version = "0.1.0"
+description = "Toolkit für AUI-Core Plugins (DTMF, Flows, Prompts)"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["auitk*"]
