@@ -1,7 +1,10 @@
 from __future__ import annotations
 import time
 from typing import Optional
+
 from .types import Ctx, AuiEvent, AuiEventConfig, InputEvent, InputKind
+from .config import get_double_key_window  # globales Zeitfenster für "**"/"##"
+
 
 async def read_input_event(
     ctx: Ctx,
@@ -9,44 +12,55 @@ async def read_input_event(
     timeout: Optional[float] = None,
 ) -> Optional[InputEvent]:
     """
-    Liest eine Taste und bildet sie auf NAV-Event (falls aktiviert) oder RAW ab.
-    Gibt None bei Timeout zurück.
+    Liest eine Taste und mappt sie auf NAV-Event (falls aktiviert) oder RAW-String.
+    - "*"  -> BACK (wenn enable_back)
+    - "#"  -> NEXT (wenn enable_next)
+    - "**" -> CANCEL (wenn enable_cancel), sonst "**" roh
+    - "##" -> SUBMIT (wenn enable_submit), sonst "##" roh
+    - Ziffern "0".."9" -> RAW
+    Gibt None bei Timeout.
+    Hinweis: Kein Pushback – ein zweites, verschiedenes Zeichen im Doppel-Fenster wird verworfen.
     """
-    t0 = time.monotonic()
     first = await ctx.get_digit(timeout)
     if first is None:
         return None
 
-    if first not in ("*", "#"):
-        return InputEvent(InputKind.RAW, first, time.monotonic())
+    now = time.monotonic()
 
-    # Doppel-Erkennung mit kleinem Zeitfenster
-    second = await ctx.get_digit(cfg.inter_event_window)
+    # Nicht Stern/Raute: direkt als RAW zurück
+    if first not in ("*", "#"):
+        return InputEvent(InputKind.RAW, first, now)
+
+    # Doppel-Erkennung mit GLOBALER Zeit
+    window = get_double_key_window()
+    second = await ctx.get_digit(window)
+
     if second == first:
         now = time.monotonic()
         if first == "*":
-            if cfg.enable_cancel:
-                return InputEvent(InputKind.NAV, AuiEvent.CANCEL, now)
-            else:
-                return InputEvent(InputKind.RAW, "**", now)
+            return (
+                InputEvent(InputKind.NAV, AuiEvent.CANCEL, now)
+                if cfg.enable_cancel
+                else InputEvent(InputKind.RAW, "**", now)
+            )
         else:  # "#"
-            if cfg.enable_submit:
-                return InputEvent(InputKind.NAV, AuiEvent.SUBMIT, now)
-            else:
-                return InputEvent(InputKind.RAW, "##", now)
+            return (
+                InputEvent(InputKind.NAV, AuiEvent.SUBMIT, now)
+                if cfg.enable_submit
+                else InputEvent(InputKind.RAW, "##", now)
+            )
 
-    # Kein Doppel – ggf. second zurückpuffern? (bewusst: nein)
-    # Begründung: auicore liefert Tastendrücke einzeln; ein „versehentlicher" Read hier
-    # würde Semantik verkomplizieren. Wenn nötig, können wir später einen Buffer ergänzen.
-
+    # Kein Doppel (oder anderes zweites Zeichen -> wird verworfen)
     now = time.monotonic()
     if first == "*":
-        if cfg.enable_back:
-            return InputEvent(InputKind.NAV, AuiEvent.BACK, now)
-        else:
-            return InputEvent(InputKind.RAW, "*", now)
+        return (
+            InputEvent(InputKind.NAV, AuiEvent.BACK, now)
+            if cfg.enable_back
+            else InputEvent(InputKind.RAW, "*", now)
+        )
     else:
-        if cfg.enable_next:
-            return InputEvent(InputKind.NAV, AuiEvent.NEXT, now)
-        else:
-            return InputEvent(InputKind.RAW, "#", now)
+        return (
+            InputEvent(InputKind.NAV, AuiEvent.NEXT, now)
+            if cfg.enable_next
+            else InputEvent(InputKind.RAW, "#", now)
+        )
