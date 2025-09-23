@@ -1,6 +1,0 @@
-from __future__ import annotations
-from typing import Protocol, Optional
-
-class Ctx(Protocol):
-    async def say(self, text: str, wait: bool = False) -> None: ...
-    async def get_digit(self, timeout: Optional[float] = None) -> Optional[str]: ...
