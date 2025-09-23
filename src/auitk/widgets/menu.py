@@ -107,9 +107,20 @@ class Menu:
                 await say_navigation_hints()
                 return
             parts = []
+            parts.append("Drücken Sie folgende Taste: ")
             for i, gi in enumerate(rng, start=1):  # i: 1..k (k<=10), gi: global index
                 key_spoken = "0" if i == 10 else str(i)   # 0 steht für den 10. Eintrag
-                parts.append(f"Drücken Sie {key_spoken} für {self.items[gi]}.")
+                parts.append(f"{key_spoken} für {self.items[gi]},")
+
+            # Vorletztes Element: letztes Komma durch " und"
+            if len(parts) >= 2:
+                left, right = parts[-2].rsplit(",", 1)
+                parts[-2] = left + " und" + right
+
+            # Letztes Element: letztes Komma durch "."
+            left, right = parts[-1].rsplit(",", 1)
+            parts[-1] = left + "." + right
+
             await Label(" ".join(parts), wait=self.wait_prompts).render(ctx)
             # Wenn weniger als 10 Einträge auf der Seite existieren
             if len(rng) < page_size:
