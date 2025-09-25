@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+src/aui_tk.egg-info/PKG-INFO
+src/aui_tk.egg-info/SOURCES.txt
+src/aui_tk.egg-info/dependency_links.txt
+src/aui_tk.egg-info/entry_points.txt
+src/aui_tk.egg-info/top_level.txt
