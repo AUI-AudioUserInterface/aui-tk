@@ -4,7 +4,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aui-adapter-tk"
+name = "aui-tk"
 version = "0.1.0"
 description = "Tk adapter for AUI (skeleton)"
 readme = "README.md"
@@ -13,7 +13,7 @@ license = {text = "LGPL-3.0-only"}
 authors = [{ name = "AUI AudioUserInterface" }]
 
 [project.entry-points."aui.adapters"]
-tk = "aui_adapter_tk:TkAdapter"
+tk = "aui_tk:TkAdapter"
 
 [tool.setuptools.packages.find]
 where = ["src"]
